@@ -1,0 +1,104 @@
+# AI Daily Briefing — example config. Copy to config.yaml and edit.
+
+llm:
+  provider: claude               # claude | openai | ollama | deepseek
+  model: claude-opus-4-5         # default model (used if stage-specific not set)
+  max_tokens_per_summary: 800
+  temperature: 0.2
+  concurrency: 4
+  # ollama_base_url: http://localhost:11434
+  # deepseek_base_url: https://api.deepseek.com
+  # For deepseek, set provider: deepseek and model: deepseek-chat (or deepseek-reasoner)
+  #
+  # Per-stage model overrides (analyst mode only):
+  # stage1_model: deepseek-reasoner  # clustering + trend judgment benefits from CoT
+  # stage2_model: deepseek-chat      # extraction is fast, no reasoning needed
+  # stage1_max_tokens: 8192          # reasoner needs headroom for thinking
+  # stage2_max_tokens: 800           # defaults to max_tokens_per_summary if unset
+
+interests:
+  topics:
+    - embodied_ai
+    - multimodal
+    - rag
+    - agent
+    - memory
+    - grounding
+    - vlm
+    - reasoning
+    - rl_for_llm
+    - long_context
+    - open_source
+  keywords:
+    embodied_ai:   [embodied, manipulation, robot, robotic, VLA, humanoid, dexterous, grasping]
+    multimodal:    [multimodal, MLLM, vision-language, VLM, audio-language, omni-modal]
+    rag:           [RAG, retrieval-augmented, retriever, dense retrieval, reranker]
+    agent:         [agent, agentic, tool-use, tool calling, autonomous, planner]
+    memory:        [long-term memory, episodic memory, memory-augmented, working memory]
+    grounding:     [grounding, visual grounding, referring expression, region]
+    vlm:           [VLM, vision-language model, vision encoder, image encoder]
+    reasoning:     [reasoning, chain-of-thought, CoT, math reasoning, code reasoning, o1, o3]
+    rl_for_llm:    [RLHF, RLAIF, DPO, GRPO, PPO, reward model, RLVR]
+    long_context:  [long context, long-context, 1M context, retrieval head]
+    open_source:   [open-source, open source, weights, checkpoint, Apache, MIT]
+
+collectors:
+  arxiv:
+    enabled: true
+    categories: [cs.AI, cs.CL, cs.CV, cs.LG, cs.RO]
+    lookback_hours: 36
+    max_items: 120
+  huggingface:
+    enabled: true
+    daily_papers: true
+    trending_models: 20
+  github_trending:
+    enabled: true
+    languages: ["", "python"]    # "" means all languages
+    since: daily                 # daily | weekly | monthly
+  reddit:
+    enabled: false               # turn on after filling .env credentials
+    subreddits: [MachineLearning, LocalLLaMA, singularity]
+    min_upvotes: 50
+    lookback_hours: 36
+  hackernews:
+    enabled: true
+    min_score: 80
+    max_items: 50
+  rss:
+    enabled: true
+    feeds:
+      - { name: "OpenAI Blog",      url: "https://openai.com/blog/rss.xml" }
+      - { name: "Anthropic News",   url: "https://www.anthropic.com/news/rss.xml" }
+      - { name: "Google DeepMind",  url: "https://deepmind.google/blog/rss.xml" }
+      - { name: "Meta AI",          url: "https://ai.meta.com/blog/rss/" }
+      - { name: "Papers with Code", url: "https://paperswithcode.com/latest/rss" }
+
+ranker:
+  source_weights:
+    arxiv: 1.0
+    huggingface: 0.9
+    github_trending: 0.85
+    rss: 0.8
+    hackernews: 0.55
+    reddit: 0.5
+  top_n_to_summarize: 30
+  min_score: 0.4
+  recency_half_life_hours: 36
+
+output:
+  reports_dir: ./reports
+  date_format: "%Y-%m-%d"
+  mode: analyst                  # analyst | legacy
+  group_by: category             # category | source (legacy mode only)
+  max_themes: 5                  # analyst: hard cap on themes
+  max_key_papers_per_theme: 3    # analyst: deep-read picks per theme
+  max_total_key_papers: 10       # analyst: global cap on deep-read items
+  top_n_for_clustering: 50       # analyst: how many ranked items go into Stage 1
+
+cache:
+  http_dir: ./data/http_cache
+  llm_cache: true
+
+logging:
+  level: INFO
