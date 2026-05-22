@@ -76,19 +76,43 @@ def run(
     config: str = typer.Option("config.yaml", "--config", "-c"),
     skip_summarize: bool = typer.Option(False, "--no-summarize"),
     skip_render: bool = typer.Option(False, "--no-render"),
+    lookback_hours: int = typer.Option(
+        None,
+        "--lookback-hours",
+        "-L",
+        help="Override collector lookback window in hours (e.g. 84 for Monday catch-up after a 2-day skip). Defaults to per-collector config.",
+    ),
 ):
     """End-to-end: collect → classify+rank → summarize → render."""
     _setup(config)
     from .pipeline import run as pipeline_run
 
-    result = pipeline_run(config, skip_summarize=skip_summarize, skip_render=skip_render)
+    result = pipeline_run(
+        config,
+        skip_summarize=skip_summarize,
+        skip_render=skip_render,
+        lookback_hours=lookback_hours,
+    )
     console.print(result)
 
 
 @app.command()
-def collect(config: str = typer.Option("config.yaml", "--config", "-c")):
+def collect(
+    config: str = typer.Option("config.yaml", "--config", "-c"),
+    lookback_hours: int = typer.Option(
+        None,
+        "--lookback-hours",
+        "-L",
+        help="Override collector lookback window in hours.",
+    ),
+):
     """Run collectors only."""
     cfg = _setup(config)
+    if lookback_hours is not None:
+        if lookback_hours <= 0:
+            raise typer.BadParameter("--lookback-hours must be positive")
+        cfg.collectors.arxiv.lookback_hours = lookback_hours
+        cfg.collectors.reddit.lookback_hours = lookback_hours
     secrets = load_secrets()
     db = open_db()
     from .pipeline import collect_all

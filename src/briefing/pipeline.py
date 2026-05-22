@@ -78,10 +78,21 @@ def run(
     config_path: str | Path = "config.yaml",
     skip_summarize: bool = False,
     skip_render: bool = False,
+    lookback_hours: int | None = None,
 ) -> dict:
-    """End-to-end run. Returns a small summary dict."""
+    """End-to-end run. Returns a small summary dict.
+
+    `lookback_hours`, if given, overrides the per-collector `lookback_hours`
+    setting at runtime (e.g. for Monday catch-up after a weekend skip).
+    """
     config = load_config(config_path)
     secrets = load_secrets()
+    if lookback_hours is not None:
+        if lookback_hours <= 0:
+            raise ValueError("lookback_hours must be positive")
+        config.collectors.arxiv.lookback_hours = lookback_hours
+        config.collectors.reddit.lookback_hours = lookback_hours
+        log.info("lookback_override", hours=lookback_hours)
     db = open_db()
 
     # Lazy imports so Step 1 boots even before later modules exist

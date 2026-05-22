@@ -54,8 +54,11 @@ briefing init
 # 完整流程：采集 → 分类+打分 → 总结 → 渲染
 briefing run
 
+# 周末跳过后，周一回溯更长窗口（覆盖 arxiv / reddit 的 lookback_hours）
+briefing run -L 84            # 等价于 --lookback-hours 84
+
 # 只跑某一步
-briefing collect              # 只抓取
+briefing collect              # 只抓取（也支持 -L / --lookback-hours）
 briefing summarize            # 只对已抓到的 top-N 跑 LLM
 briefing render               # 只渲染已总结的 item
 briefing render --date 2026-05-19   # 重渲染历史日报
