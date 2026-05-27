@@ -256,12 +256,25 @@ def run_analyst(db: Database, config: AppConfig, secrets: Secrets, date_str: str
     log.info("analyst_start", date=date_label, candidates=len(candidates),
              stage1_model=provider_s1.model, stage2_model=provider_s2.model)
 
-    # ---- Stage 1
-    try:
-        raw = _run_stage1(provider_s1, candidates, config, date_label)
-    except Exception as e:
-        log.error("stage1_failed", err=str(e))
-        return {"themes": 0, "key_papers": 0, "error": str(e)}
+    # ---- Stage 1 (with retry for empty/truncated responses)
+    max_stage1_retries = 2
+    raw = None
+    for attempt in range(max_stage1_retries):
+        try:
+            raw = _run_stage1(provider_s1, candidates, config, date_label)
+            if raw and isinstance(raw, dict):
+                break  # success
+            log.warning("stage1_empty_response", attempt=attempt + 1)
+        except Exception as e:
+            log.warning("stage1_attempt_failed", attempt=attempt + 1, err=str(e))
+        if attempt < max_stage1_retries - 1:
+            import time
+            time.sleep(5)  # brief pause before retry
+
+    if not raw or not isinstance(raw, dict):
+        log.error("stage1_failed_all_retries")
+        return {"themes": 0, "key_papers": 0, "error": "stage1 failed after retries"}
+
     report = _normalize_stage1(raw, valid_sids)
 
     upsert_analyst_report(
