@@ -84,6 +84,10 @@ class ArxivCollector(BaseCollector):
             delay_seconds=ARXIV_DELAY_SECONDS,
             num_retries=ARXIV_NUM_RETRIES,
         )
+        # Override default User-Agent to avoid triggering bot detection
+        client._session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+        })
         search = arxiv.Search(
             query=f"cat:{category}",
             max_results=max_results,
